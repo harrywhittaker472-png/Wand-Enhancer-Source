@@ -7,14 +7,24 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          dotnet-version: '8.0.x'
-      - name: Publish executable
-        run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+          node-version: '20'
+      - name: Build project
+        run: |
+          if (Test-Path "build.cmd") {
+            cmd /c build.cmd
+          } else {
+            nuget restore
+            msbuild /p:Configuration=Release /p:Platform="Any CPU"
+          }
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: WandEnhancer
-          path: ./publish/*.exe
+          path: |
+            **/*.exe
+            !**/obj/**
